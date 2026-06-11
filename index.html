@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WBZN Apparel - Gaya & Kualitas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F0F1A',
+                        secondary: '#1A1A2E',
+                        accent: '#D4AF37',
+                        light: '#EAEAEA',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                background-image: linear-gradient(90deg, #D4AF37, #FFF8DC);
+            }
+            .border-gradient {
+                border: 1px solid transparent;
+                background-clip: padding-box, border-box;
+                background-origin: padding-box, border-box;
+                background-image: linear-gradient(#1A1A2E, #1A1A2E), linear-gradient(90deg, #D4AF37, #B8860B);
+            }
+            .canvas-bg {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+            .glass {
+                background: rgba(26, 26, 46, 0.7);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(212, 175, 55, 0.15);
+            }
+            .hover-accent {
+                transition: all 0.4s ease;
+            }
+            .hover-accent:hover {
+                border-color: rgba(212, 175, 55, 0.5);
+                box-shadow: 0 8px 32px rgba(212, 175, 55, 0.2);
+                transform: translateY(-5px);
+            }
+            /* Tambahan gaya baru */
+            .glow-text {
+                text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+            }
+            .scroll-indicator {
+                position: absolute;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                animation: bounce 2s infinite;
+            }
+            @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+                40% { transform: translateX(-50%) translateY(-10px); }
+                60% { transform: translateX(-50%) translateY(-5px); }
+            }
+            .reveal {
+                opacity: 0;
+                transform: translateY(30px);
+                transition: all 0.8s ease;
+            }
+            .reveal.active {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .cursor-dot {
+                position: fixed;
+                width: 8px;
+                height: 8px;
+                background: #D4AF37;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                transition: transform 0.1s;
+            }
+            .cursor-outline {
+                position: fixed;
+                width: 35px;
+                height: 35px;
+                border: 1px solid rgba(212, 175, 55, 0.5);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                transition: all 0.2s ease-out;
+            }
+            .cursor-hover {
+                transform: scale(1.5);
+                background: rgba(212, 175, 55, 0.2);
+                border-color: #D4AF37;
+            }
+            .btn-pulse {
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+                70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-primary text-light overflow-x-hidden">
+    <!-- Kursor Kustom -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Canvas Animasi Latar Belakang YANG DIPERBARUI -->
+    <canvas id="particlesCanvas" class="canvas-bg"></canvas>
+
+    <!-- Navigasi -->
+    <nav class="fixed w-full top-0 z-50 glass py-4 transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-gradient glow-text">WBZN APPAREL</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#beranda" class="hover:text-accent transition-colors relative group">
+                    Beranda
+                    <span class="absolute left-0 -bottom-1 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#koleksi" class="hover:text-accent transition-colors relative group">
+                    Koleksi
+                    <span class="absolute left-0 -bottom-1 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#tentang" class="hover:text-accent transition-colors relative group">
+                    Tentang Kami
+                    <span class="absolute left-0 -bottom-1 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#kontak" class="hover:text-accent transition-colors relative group">
+                    Kontak
+                    <span class="absolute left-0 -bottom-1 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            </div>
+            <button class="md:hidden text-2xl" id="menuBtn">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <!-- Menu Mobile -->
+        <div class="md:hidden hidden glass mt-2 mx-4 rounded-lg overflow-hidden" id="mobileMenu">
+            <div class="flex flex-col space-y-3 p-4">
+                <a href="#beranda" class="hover:text-accent transition-colors py-2 border-b border-accent/10">Beranda</a>
+                <a href="#koleksi" class="hover:text-accent transition-colors py-2 border-b border-accent/10">Koleksi</a>
+                <a href="#tentang" class="hover:text-accent transition-colors py-2 border-b border-accent/10">Tentang Kami</a>
+                <a href="#kontak" class="hover:text-accent transition-colors py-2">Kontak</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bagian Beranda -->
+    <section id="beranda" class="min-h-screen flex items-center justify-center pt-16 relative">
+        <div class="container mx-auto px-6 text-center reveal">
+            <h1 class="text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold leading-tight mb-4 glow-text">
+                Gaya yang Menceritakan <br>
+                <span class="text-gradient">Identitas Kamu</span>
+            </h1>
+            <p class="text-[clamp(1rem,2vw,1.2rem)] max-w-2xl mx-auto mb-8 text-gray-300">
+                WBZN Apparel menghadirkan pakaian berkualitas tinggi dengan desain modern dan eksklusif. Dibuat untuk mereka yang berani tampil beda.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#koleksi" class="px-8 py-3 bg-accent text-primary font-semibold rounded-lg hover:bg-yellow-500 transition-all duration-300 shadow-lg shadow-accent/20 btn-pulse">
+                    Lihat Koleksi
+                </a>
+                <a href="#tentang" class="px-8 py-3 border border-accent/30 rounded-lg hover:border-accent transition-all duration-300">
+                    Tentang Kami
+                </a>
+            </div>
+        </div>
+        <div class="scroll-indicator text-accent">
+            <i class="fa fa-chevron-down text-2xl"></i>
+        </div>
+    </section>
+
+    <!-- Bagian Koleksi Produk -->
+    <section id="koleksi" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14 reveal">
+                <h2 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-4 glow-text">Koleksi Terbaru</h2>
+                <p class="text-gray-300 max-w-xl mx-auto">Temukan berbagai pilihan pakaian yang dirancang dengan detail sempurna dan kualitas terbaik.</p>
+            </div>
+            <!-- Filter Kategori -->
+            <div class="flex flex-wrap justify-center gap-4 mb-10 reveal">
+                <button class="px-5 py-2 rounded-full bg-accent text-primary font-medium filter-btn active" data-filter="semua">Semua</button>
+                <button class="px-5 py-2 rounded-full glass border border-accent/20 hover:border-accent transition-all filter-btn" data-filter="kaos">Kaos</button>
+                <button class="px-5 py-2 rounded-full glass border border-accent/20 hover:border-accent transition-all filter-btn" data-filter="hoodie">Hoodie</button>
+                <button class="px-5 py-2 rounded-full glass border border-accent/20 hover:border-accent transition-all filter-btn" data-filter="jaket">Jaket</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" id="produkGrid">
+                <!-- Produk 1 -->
+                <div class="glass rounded-xl p-5 border-gradient hover-accent reveal produk-item" data-kategori="kaos">
+                    <div class="h-72 rounded-lg mb-4 overflow-hidden bg-secondary flex items-center justify-center relative group">
+                        <i class="fa fa-tshirt text-6xl text-accent/50"></i>
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="px-4 py-2 bg-accent text-primary rounded-lg font-medium">Lihat Detail</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Kaos Premium WBZN</h3>
+                    <p class="text-gray-400 text-sm mb-3">Bahan katun adem, nyaman dipakai sehari-hari dengan sablon awet.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-accent font-bold text-lg">$15.0 USD</span>
+                        <button class="px-4 py-2 bg-accent/10 text-accent rounded hover:bg-accent hover:text-primary transition-all">
+                            Beli Sekarang
+                        </button>
+                    </div>
+                </div>
+                <!-- Produk 2 -->
+                <div class="glass rounded-xl p-5 border-gradient hover-accent reveal produk-item" data-kategori="hoodie">
+                    <div class="h-72 rounded-lg mb-4 overflow-hidden bg-secondary flex items-center justify-center relative group">
+                        <i class="fa fa-tshirt text-6xl text-accent/50"></i>
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="px-4 py-2 bg-accent text-primary rounded-lg font-medium">Lihat Detail</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Hoodie WBZN Edition</h3>
+                    <p class="text-gray-400 text-sm mb-3">Bahan tebal berkualitas, desain simpel namun terlihat elegan dan modern.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-accent font-bold text-lg">$20.0 USD</span>
+                        <button class="px-4 py-2 bg-accent/10 text-accent rounded hover:bg-accent hover:text-primary transition-all">
+                            Beli Sekarang
+                        </button>
+                    </div>
+                </div>
+                <!-- Produk 3 -->
+                <div class="glass rounded-xl p-5 border-gradient hover-accent reveal produk-item" data-kategori="jaket">
+                    <div class="h-72 rounded-lg mb-4 overflow-hidden bg-secondary flex items-center justify-center relative group">
+                        <i class="fa fa-tshirt text-6xl text-accent/50"></i>
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="px-4 py-2 bg-accent text-primary rounded-lg font-medium">Lihat Detail</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Jaket Varsity WBZN</h3>
+                    <p class="text-gray-400 text-sm mb-3">Perpaduan bahan kulit dan kain, tampilan sporty dan mewah untuk segala suasana.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-accent font-bold text-lg">$22.0 USD</span>
+                        <button class="px-4 py-2 bg-accent/10 text-accent rounded hover:bg-accent hover:text-primary transition-all">
+                            Beli Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bagian Statistik -->
+    <section class="py-16 bg-secondary/30">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="reveal">
+                    <h3 class="text-4xl font-bold text-accent mb-2 counter" data-target="5000">0</h3>
+                    <p class="text-gray-300">Pelanggan Puas</p>
+                </div>
+                <div class="reveal">
+                    <h3 class="text-4xl font-bold text-accent mb-2 counter" data-target="150">0</h3>
+                    <p class="text-gray-300">Desain Unik</p>
+                </div>
+                <div class="reveal">
+                    <h3 class="text-4xl font-bold text-accent mb-2 counter" data-target="5">0</h3>
+                    <p class="text-gray-300">Tahun Berpengalaman</p>
+                </div>
+                <div class="reveal">
+                    <h3 class="text-4xl font-bold text-accent mb-2 counter" data-target="100">0</h3>
+                    <p class="text-gray-300">Kualitas Terjamin %</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bagian CEO & Founder -->
+    <section id="tentang" class="py-20 bg-secondary/40">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14 reveal">
+                <h2 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-4 glow-text">CEO & Founder</h2>
+                <p class="text-gray-300 max-w-xl mx-auto">Di balik setiap desain ada visi untuk menciptakan gaya yang berkelas dan bermakna.</p>
+            </div>
+            <div class="max-w-4xl mx-auto glass rounded-2xl p-8 border-gradient flex flex-col md:flex-row items-center gap-8 reveal">
+                <div class="w-48 h-48 rounded-full bg-secondary flex items-center justify-center border-2 border-accent/30 hover:scale-105 transition-transform duration-500">
+                    <i class="fa fa-user-circle text-8xl text-accent/70"></i>
+                </div>
+                <div class="text-center md:text-left">
+                    <h3 class="text-3xl font-bold text-gradient mb-2">Rey</h3>
+                    <p class="text-lg text-accent mb-4">Pendiri & CEO WBZN Apparel</p>
+                    <p class="text-gray-300 leading-relaxed">
+                        Memulai perjalanan dari ketertarikan mendalam terhadap dunia mode dan kreativitas, Rey mendirikan WBZN Apparel dengan misi menghadirkan produk berkualitas tinggi yang dapat diakses oleh semua kalangan. Berfokus pada inovasi desain dan kepuasan pelanggan, beliau terus mengembangkan merek ini menjadi salah satu ikon gaya modern di Indonesia.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bagian Kontak -->
+    <section id="kontak" class="py-20">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-4 glow-text reveal">Hubungi Kami</h2>
+            <p class="text-gray-300 max-w-xl mx-auto mb-10 reveal">Ada pertanyaan atau ingin bekerja sama? Jangan ragu untuk menghubungi kami.</p>
+            <div class="flex flex-wrap justify-center gap-8">
+                <a href="#" class="glass p-6 rounded-xl w-64 hover-accent border-gradient reveal">
+                    <i class="fa fa-instagram text-3xl text-accent mb-3"></i>
+                    <h4 class="font-semibold">Instagram</h4>
+                    <p class="text-gray-400 text-sm">@wbznapparel</p>
+                </a>
+                <a href="#" class="glass p-6 rounded-xl w-64 hover-accent border-gradient reveal">
+                    <i class="fa fa-whatsapp text-3xl text-accent mb-3"></i>
+                    <h4 class="font-semibold">WhatsApp</h4>
+                    <p class="text-gray-400 text-sm">+62 8xx-xxxx-xxxx</p>
+                </a>
+                <a href="#" class="glass p-6 rounded-xl w-64 hover-accent border-gradient reveal">
+                    <i class="fa fa-envelope text-3xl text-accent mb-3"></i>
+                    <h4 class="font-semibold">Email</h4>
+                    <p class="text-gray-400 text-sm">info@wbznapparel.com</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tombol Kembali ke Atas -->
+    <button id="backToTop" class="fixed bottom-8 right-8 w-12 h-12 rounded-full bg-accent/20 border border-accent/40 text-accent flex items-center justify-center hover:bg-accent hover:text-primary transition-all duration-300 opacity-0 invisible z-40">
+        <i class="fa fa-chevron-up"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-accent/10">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-gray-400">&copy; 2026 WBZN Apparel. Semua Hak Dilindungi. Dibuat oleh Rey</p>
+        </div>
+    </footer>
+
+    <!-- Script Semua Fitur -->
+    <script>
+        // === CANVAS ANIMASI DIPERBARUI (Lebih Dinamis) ===
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.baseX = this.x;
+                this.baseY = this.y;
+                this.density = (Math.random() * 30) + 1;
+                this.color = `rgba(212, 175, 55, ${Math.random() * 0.3 + 0.15})`;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let forceDirectionX = dx / distance;
+                let forceDirectionY = dy / distance;
+                let maxDistance = mouse.radius;
+                let force = (maxDistance - distance) / maxDistance;
+                let directionX = forceDirectionX * force * this.density;
+                let directionY = forceDirectionY * force * this.density;
+
+                if (distance < mouse.radius) {
+                    this.x -= directionX;
+                    this.y -= directionY;
+                } else {
+                    if (this.x !== this.baseX) {
+                        let dx = this.x - this.baseX;
+                        this.x -= dx / 10;
+                    }
+                    if (this.y !== this.baseY) {
+                        let dy = this.y - this.baseY;
+                        this.y -= dy / 10;
+                    }
+                }
+            }
+        }
+
+        function init() {
+            particlesArray = [];
+            for (let i = 0; i < 200; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            // Hubungkan partikel berdekatan
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let dx = particlesArray[a].x - particlesArray[b].x;
+                    let dy = particlesArray[a].y - particlesArray[b].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(212, 175, 55, ${0.08 - dist/1250})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        init();
+        animate();
+
+        // === KURSOR KUSTOM ===
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        const hoverElements = document.querySelectorAll('a, button, .hover-accent');
+
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+            cursorOutline.style.transform = `translate(${e.clientX - 17}px, ${e.clientY - 17}px)`;
+        });
+
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseover', () => {
+                cursorOutline.classList.add('cursor-hover');
+            });
+            el.addEventListener('mouseout', () => {
+                cursorOutline.classList.remove('cursor-hover');
+            });
+        });
+
+        // === ANIMASI MUNCUL SAAT GULIR ===
+        const revealElements = document.querySelectorAll('.reveal');
+        const observerOptions = { threshold: 0.1 };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        revealElements.forEach(el => observer.observe(el));
+
+        // === FILTER PRODUK ===
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const produkItems = document.querySelectorAll('.produk-item');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-accent', 'text-primary');
+                    b.classList.add('glass', 'border', 'border-accent/20');
+                });
+                btn.classList.add('bg-accent', 'text-primary');
+                btn.classList.remove('glass', 'border', 'border-accent/20');
+
+                const filter = btn.getAttribute('data-filter');
+                produkItems.forEach(item => {
+                    if (filter === 'semua' || item.getAttribute('data-kategori') === filter) {
+                        item.style.display = 'block';
+                        setTimeout(() => item.classList.add('active'), 100);
+                    } else {
+                        item.classList.remove('active');
+                        setTimeout(() => item.style.display = 'none', 300);
+                    }
+                });
+            });
+        });
+
+        // === ANIMASI NOMOR STATISTIK ===
+        const counters = document.querySelectorAll('.counter');
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = parseInt(counter.getAttribute('data-target'));
+                    let count = 0;
+                    const speed = 2000 / target;
+
+                    const updateCounter = () => {
+                        if (count < target) {
+                            count += Math.ceil(target / 100);
+                            counter.textContent = count;
+                            setTimeout(updateCounter, speed);
+                        } else {
+                            counter.textContent = target;
+                        }
+                    };
+                    updateCounter();
+                    counterObserver.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        counters.forEach(c => counterObserver.observe(c));
+
+        // === NAVIGASI SAAT GULIR ===
+        const navbar = document.getElementById('navbar');
+        const backToTop = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('py-2', 'shadow-lg', 'shadow-black/20');
+                navbar.classList.remove('py-4');
+                backToTop.classList.remove('opacity-0', 'invisible');
+                backToTop.classList.add('opacity-100', 'visible');
+            } else {
+                navbar.classList.add('py-4');
+                navbar.classList.remove('py-2', 'shadow-lg', 'shadow-black/20');
+                backToTop.classList.add('opacity-0', 'invisible');
+                backToTop.classList.remove('opacity-100', 'visible');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // === MENU MOBILE ===
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
